@@ -103,6 +103,9 @@ export const APP = {
     confirmDeleteConfirmedMatch:
       'Esta partida já está confirmada. Cancelar remove do ranking. Continuar?',
     confirmEditMatch: 'Salvar alterações nesta partida confirmada?',
+    pendingConfirmOne: 'Você tem 1 partida aguardando sua confirmação.',
+    pendingConfirmMany: 'Você tem {count} partidas aguardando sua confirmação.',
+    pendingConfirmHint: 'Abra a aba Partidas e confirme ou recuse.',
     saved: 'Salvo!',
     error: 'Algo deu errado. Tente de novo.',
     signedOut: 'Você saiu da conta.',

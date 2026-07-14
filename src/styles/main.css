@@ -549,6 +549,54 @@ select:focus {
   color: var(--color-green-dark);
 }
 
+.alert-pending {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background: #fff8f0;
+  border-color: var(--color-clay);
+  color: #7a4a28;
+}
+
+.alert-pending-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-pending-body .match-meta {
+  margin: 0.2rem 0 0;
+}
+
+.alert-pending-dot {
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: var(--color-clay);
+  box-shadow: 0 0 0 3px rgba(200, 121, 65, 0.22);
+  animation: match-pending-pulse 2s ease-in-out infinite;
+}
+
+.alert-pending-btn {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.tab-pending-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.25rem;
+  border-radius: 50%;
+  background: var(--color-clay);
+  vertical-align: super;
+  box-shadow: 0 0 0 2px rgba(200, 121, 65, 0.25);
+  animation: match-pending-pulse 2s ease-in-out infinite;
+}
+
 .empty {
   color: var(--color-text-muted);
   text-align: center;

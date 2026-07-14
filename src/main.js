@@ -46,6 +46,7 @@ const state = {
   formError: null,
   editingMatchId: null,
   collapsedMatchDates: null,
+  matchDatesExpanded: new Set(),
 };
 
 const medals = ['🥇', '🥈', '🥉'];
@@ -82,13 +83,52 @@ function groupMatchesByDate(matches) {
 }
 
 function ensureMatchDateCollapseInit() {
-  if (state.collapsedMatchDates !== null) return;
-
-  state.collapsedMatchDates = new Set();
-  for (const { date, matches } of groupMatchesByDate(state.matches)) {
-    const hasPending = matches.some((m) => m.status === 'pending');
-    if (!hasPending) state.collapsedMatchDates.add(date);
+  if (state.collapsedMatchDates === null) {
+    state.collapsedMatchDates = new Set(groupMatchesByDate(state.matches).map(({ date }) => date));
+    return;
   }
+
+  for (const { date } of groupMatchesByDate(state.matches)) {
+    if (!state.matchDatesExpanded.has(date)) {
+      state.collapsedMatchDates.add(date);
+    }
+  }
+}
+
+function getMatchesAwaitingMyConfirmation() {
+  if (!state.profile) return [];
+  return state.matches.filter(
+    (m) =>
+      m.status === 'pending' &&
+      m.registered_by_id !== state.profile.id &&
+      (m.player1_id === state.profile.id || m.player2_id === state.profile.id),
+  );
+}
+
+function renderPendingConfirmAlert() {
+  const pending = getMatchesAwaitingMyConfirmation();
+  if (pending.length === 0 || !state.session) return '';
+
+  const message =
+    pending.length === 1
+      ? APP.messages.pendingConfirmOne
+      : APP.messages.pendingConfirmMany.replace('{count}', String(pending.length));
+
+  const action =
+    state.tab !== 'partidas'
+      ? `<button type="button" class="btn btn-primary alert-pending-btn" data-go-partidas>Ver partidas</button>`
+      : '';
+
+  return `
+    <div class="alert alert-pending" role="alert">
+      <span class="alert-pending-dot" aria-hidden="true"></span>
+      <div class="alert-pending-body">
+        <strong>${escapeHtml(message)}</strong>
+        <p class="match-meta">${escapeHtml(APP.messages.pendingConfirmHint)}</p>
+      </div>
+      ${action}
+    </div>
+  `;
 }
 
 function isMatchDateCollapsed(date, matches) {
@@ -935,12 +975,17 @@ function render() {
 
     <nav class="tabs">
       ${APP.tabs
-        .map(
-          (t) =>
-            `<button class="tab ${state.tab === t ? 'active' : ''}" data-tab="${t}">${APP.tabLabels[t] ?? t}</button>`,
-        )
+        .map((t) => {
+          const pendingTabDot =
+            t === 'partidas' && getMatchesAwaitingMyConfirmation().length > 0
+              ? '<span class="tab-pending-dot" aria-label="Partidas pendentes"></span>'
+              : '';
+          return `<button class="tab ${state.tab === t ? 'active' : ''}" data-tab="${t}">${APP.tabLabels[t] ?? t}${pendingTabDot}</button>`;
+        })
         .join('')}
     </nav>
+
+    ${!configErr ? renderPendingConfirmAlert() : ''}
 
     <section class="panel">
       <h2>${escapeHtml(panelTitle())}</h2>
@@ -997,6 +1042,13 @@ function bindEvents() {
   document.querySelector('[data-go-auth]')?.addEventListener('click', () => {
     state.tab = 'mais';
     state.maisView = 'auth';
+    render();
+  });
+
+  document.querySelector('[data-go-partidas]')?.addEventListener('click', () => {
+    state.tab = 'partidas';
+    state.error = null;
+    state.formError = null;
     render();
   });
 
@@ -1169,8 +1221,10 @@ function bindEvents() {
       if (!state.collapsedMatchDates) state.collapsedMatchDates = new Set();
       if (state.collapsedMatchDates.has(date)) {
         state.collapsedMatchDates.delete(date);
+        state.matchDatesExpanded.add(date);
       } else {
         state.collapsedMatchDates.add(date);
+        state.matchDatesExpanded.delete(date);
       }
       render();
     });
