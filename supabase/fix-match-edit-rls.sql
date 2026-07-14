@@ -10,9 +10,14 @@ begin
   if tg_op = 'UPDATE' then
     if new.player1_id is distinct from old.player1_id
       or new.player2_id is distinct from old.player2_id
-      or new.registered_by_id is distinct from old.registered_by_id
-      or new.status is distinct from old.status then
-      raise exception 'Não é permitido alterar jogadores ou status da partida';
+      or new.registered_by_id is distinct from old.registered_by_id then
+      raise exception 'Não é permitido alterar jogadores da partida';
+    end if;
+
+    if old.status is distinct from new.status then
+      if not (old.status = 'pending' and new.status in ('confirmed', 'rejected')) then
+        raise exception 'Não é permitido alterar status da partida';
+      end if;
     end if;
   end if;
   return new;
