@@ -8,7 +8,7 @@ export const APP = {
     secondary: 'O Ranking',
   },
   subtitle: 'Quem manda na quadra?',
-  logo: '/logo.png',
+  logo: `${import.meta.env.BASE_URL}logo.png`,
   locale: 'pt-BR',
 
   /** Abas: ranking | partidas | registrar | mais */
