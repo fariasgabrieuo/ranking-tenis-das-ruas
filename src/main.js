@@ -5,6 +5,7 @@ import { computeRanking, getPlayerName, getCafeComLeiteZone } from './lib/rankin
 import { computeAllPlayerAchievements, getPlayerAchievements, applyDevAchievementPreview, ACHIEVEMENTS } from './lib/achievements.js';
 import { getAchievementIconHtml } from './lib/achievementIcons.js';
 import { getProfileLocation } from './lib/profiles.js';
+import { formatSupabaseError } from './lib/supabaseErrors.js';
 import { parseSetScoreFromGames } from './lib/scoreParser.js';
 import { getSession, signUp, signIn, signOut, onAuthStateChange, completeAuthFromUrl } from './lib/auth.js';
 import { formatAuthError } from './lib/authErrors.js';
@@ -1003,7 +1004,7 @@ function bindEvents() {
         await loadData();
         showToast(APP.messages.saved);
       } catch (err) {
-        state.error = err.message;
+        state.error = formatSupabaseError(err);
         render();
       }
     });
@@ -1017,7 +1018,7 @@ function bindEvents() {
         await loadData();
         showToast(APP.messages.saved);
       } catch (err) {
-        state.error = err.message;
+        state.error = formatSupabaseError(err);
         render();
       }
     });
@@ -1031,7 +1032,7 @@ function bindEvents() {
         await loadData();
         showToast(APP.messages.saved);
       } catch (err) {
-        state.error = err.message;
+        state.error = formatSupabaseError(err);
         render();
       }
     });
