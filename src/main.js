@@ -2,7 +2,8 @@ import './styles/main.css';
 import { APP } from './config/app.js';
 import { RULES } from './config/rules.js';
 import { computeRanking, getPlayerName, getCafeComLeiteZone } from './lib/ranking.js';
-import { computeAllPlayerAchievements, getPlayerAchievements, ACHIEVEMENTS } from './lib/achievements.js';
+import { computeAllPlayerAchievements, getPlayerAchievements, applyDevAchievementPreview, ACHIEVEMENTS } from './lib/achievements.js';
+import { getAchievementIconHtml } from './lib/achievementIcons.js';
 import { getProfileLocation } from './lib/profiles.js';
 import { parseSetScore, validateScoreForWinner } from './lib/scoreParser.js';
 import { getSession, signUp, signIn, signOut, onAuthStateChange, completeAuthFromUrl } from './lib/auth.js';
@@ -78,6 +79,16 @@ function matchTypeLabel(type) {
   return RULES.matchTypes[type]?.label ?? type;
 }
 
+function achievementTitle(a) {
+  return a.count > 1 ? `${a.title} (${a.count}×) — ${a.description}` : `${a.title} — ${a.description}`;
+}
+
+function renderAchievementIconMarkup(a, className) {
+  const count =
+    a.count > 1 ? `<span class="achievement-count" aria-label="${a.count} vezes">${a.count}</span>` : '';
+  return `<span class="${className}" title="${escapeHtml(achievementTitle(a))}">${getAchievementIconHtml(a)}${count}</span>`;
+}
+
 function renderAchievementBadges(playerId, { compact = true } = {}) {
   const list = getPlayerAchievements(state.achievementMap, playerId);
   if (list.length === 0) return '';
@@ -86,11 +97,22 @@ function renderAchievementBadges(playerId, { compact = true } = {}) {
   const extra = compact && list.length > 3 ? `<span class="achievement-more">+${list.length - 3}</span>` : '';
 
   return `<span class="achievement-badges">${shown
-    .map(
-      (a) =>
-        `<span class="achievement-badge" title="${escapeHtml(`${a.title} — ${a.description}`)}">${a.icon}</span>`,
-    )
+    .map((a) => renderAchievementIconMarkup(a, 'achievement-badge'))
     .join('')}${extra}</span>`;
+}
+
+function renderRankingAchievements(playerId) {
+  const list = getPlayerAchievements(state.achievementMap, playerId);
+  if (list.length === 0) return '';
+
+  const icons = list.map((a) => renderAchievementIconMarkup(a, 'player-achievement-icon')).join('');
+  const summary = list
+    .map((a) => (a.count > 1 ? `${a.title} (${a.count}×)` : a.title))
+    .join(', ');
+
+  return `<div class="player-achievements" aria-label="Conquistas: ${escapeHtml(summary)}" title="${escapeHtml(summary)}">
+    <span class="player-achievement-icons">${icons}</span>
+  </div>`;
 }
 
 function renderAchievementList(playerId) {
@@ -103,9 +125,9 @@ function renderAchievementList(playerId) {
     .map(
       (a) => `
       <li class="achievement-item">
-        <span class="achievement-item-icon">${a.icon}</span>
+        <span class="achievement-item-icon">${renderAchievementIconMarkup(a, 'achievement-item-badge')}</span>
         <div>
-          <strong>${escapeHtml(a.title)}</strong>
+          <strong>${escapeHtml(a.title)}${a.count > 1 ? ` ×${a.count}` : ''}</strong>
           <p class="match-meta">${escapeHtml(a.description)}</p>
         </div>
       </li>
@@ -140,18 +162,29 @@ function renderRanking() {
   }
 
   const cafeZone = getCafeComLeiteZone(ranked.length);
-  const cafeLabels = RULES.cafeComLeite.labels;
+  const cafeSlots = RULES.cafeComLeite.slots;
 
   const cols = APP.rankingColumns
     .map((col) => `<th${col.width ? ` style="width:${col.width}"` : ''}>${col.label}</th>`)
     .join('');
 
+  const colCount = APP.rankingColumns.length;
+
   const rows = ranked
     .map((p) => {
-      let cafeLabel = '';
-      if (cafeZone.has(p.position)) {
+      let cafeFooter = '';
+      const inCafeZone = cafeZone.has(p.position);
+      if (inCafeZone) {
         const idx = p.position === ranked.length ? 1 : 0;
-        cafeLabel = `<span class="cafe-label">${cafeLabels[idx]}</span>`;
+        const slot = cafeSlots[idx];
+        cafeFooter = `<tr class="cafe-row-footer cafe-row-footer--${slot.variant}">
+          <td colspan="${colCount}" class="cafe-footer-bar">
+            <span class="cafe-footer-inner">
+              <span class="cafe-footer-icon" aria-hidden="true">${slot.icon}</span>
+              <span class="cafe-footer-label">${escapeHtml(slot.text)}</span>
+            </span>
+          </td>
+        </tr>`;
       }
 
       const cells = APP.rankingColumns
@@ -159,16 +192,22 @@ function renderRanking() {
           switch (col.key) {
             case 'position':
               return `<td>${medalForPosition(p.position)}</td>`;
-            case 'nickname':
+            case 'nickname': {
+              const locationLine =
+                p.location && p.location !== '—'
+                  ? `<span class="player-location">${escapeHtml(p.location)}</span>`
+                  : '';
+              const achievementsLine = renderRankingAchievements(p.id);
               return `<td class="player-cell">
-                <button type="button" class="player-link" data-view-profile="${p.id}">
-                  <strong>${escapeHtml(p.nickname)}</strong>
+                <button type="button" class="player-link player-link-stack" data-view-profile="${p.id}">
+                  <strong class="player-name">${escapeHtml(p.nickname)}</strong>
+                  ${locationLine}
                 </button>
-                ${renderAchievementBadges(p.id)}
-                ${cafeLabel}
+                ${achievementsLine}
               </td>`;
+            }
             case 'location':
-              return `<td>${escapeHtml(p.location)}</td>`;
+              return '';
             case 'winRate':
               return `<td>${p.winRate}%</td>`;
             default:
@@ -176,7 +215,8 @@ function renderRanking() {
           }
         })
         .join('');
-      return `<tr>${cells}</tr>`;
+      const rowClass = inCafeZone ? ' ranking-row--with-cafe' : '';
+      return `<tr class="ranking-row${rowClass}">${cells}</tr>${cafeFooter}`;
     })
     .join('');
 
@@ -555,7 +595,7 @@ function renderConquistas() {
           return `
             <article class="conquista-card">
               <div class="conquista-card-head">
-                <span class="conquista-icon">${a.icon}</span>
+                <span class="conquista-icon">${getAchievementIconHtml(a)}</span>
                 <h4>${escapeHtml(a.title)}</h4>
               </div>
               <p class="match-meta">${escapeHtml(a.description)}</p>
@@ -1043,7 +1083,10 @@ async function loadData() {
     const [profiles, matches] = await Promise.all([fetchProfiles(), fetchMatches()]);
     state.profiles = profiles;
     state.matches = matches;
-    state.achievementMap = computeAllPlayerAchievements(profiles, matches);
+    state.achievementMap = applyDevAchievementPreview(
+      computeAllPlayerAchievements(profiles, matches),
+      profiles,
+    );
   } catch (err) {
     state.error = err.message ?? APP.messages.error;
   } finally {

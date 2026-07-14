@@ -18,12 +18,28 @@ function loserGames(match, winnerId) {
   return winnerId === match.player1_id ? match.player2_games : match.player1_games;
 }
 
+function emptyCounts() {
+  return new Map();
+}
+
+function bump(counts, id, amount = 1) {
+  counts.set(id, (counts.get(id) ?? 0) + amount);
+}
+
+function countsToList(countMap) {
+  return ACHIEVEMENTS.map((def) => {
+    const count = countMap.get(def.id) ?? 0;
+    if (count <= 0) return null;
+    return { ...def, count };
+  }).filter(Boolean);
+}
+
 /**
  * Calcula conquistas de todos os jogadores a partir das partidas confirmadas.
  * Público — derivado dos dados do ranking, sem edição manual.
  */
 export function computeAllPlayerAchievements(profiles, matches) {
-  const earned = new Map(profiles.map((p) => [p.id, new Set()]));
+  const earned = new Map(profiles.map((p) => [p.id, emptyCounts()]));
   const streaks = new Map(profiles.map((p) => [p.id, 0]));
   const matchCounts = new Map(profiles.map((p) => [p.id, 0]));
 
@@ -38,18 +54,20 @@ export function computeAllPlayerAchievements(profiles, matches) {
     const rankingBefore = computeRanking(profiles, processed);
     const leader = rankingBefore[0];
     if (leader?.wins > 0 && loserId === leader.id) {
-      earned.get(winnerId).add('carrasco');
+      bump(earned.get(winnerId), 'carrasco');
     }
 
-    if (winnerGames(match, winnerId) === 6 && loserGames(match, winnerId) === 0) {
-      earned.get(winnerId).add('mestre');
+    const wGames = winnerGames(match, winnerId);
+    const lGames = loserGames(match, winnerId);
+    if (wGames === 6 && lGames === 0) {
+      bump(earned.get(winnerId), 'mestre');
+      bump(earned.get(loserId), 'baldo');
     }
+
+    bump(earned.get(loserId), 'fracassado');
 
     streaks.set(winnerId, (streaks.get(winnerId) ?? 0) + 1);
     streaks.set(loserId, 0);
-
-    if (streaks.get(winnerId) >= 3) earned.get(winnerId).add('em_chamas');
-    if (streaks.get(winnerId) >= 6) earned.get(winnerId).add('invicto');
 
     matchCounts.set(winnerId, (matchCounts.get(winnerId) ?? 0) + 1);
     matchCounts.set(loserId, (matchCounts.get(loserId) ?? 0) + 1);
@@ -58,13 +76,16 @@ export function computeAllPlayerAchievements(profiles, matches) {
   }
 
   for (const [playerId, streak] of streaks) {
-    if (streak >= 3) earned.get(playerId)?.add('em_chamas');
+    const counts = earned.get(playerId);
+    if (!counts) continue;
+    if (streak >= 3) counts.set('em_chamas', 1);
+    if (streak >= 6) counts.set('invicto', 1);
   }
 
   const maxMatches = Math.max(0, ...matchCounts.values());
   if (maxMatches > 0) {
     for (const [playerId, count] of matchCounts) {
-      if (count === maxMatches) earned.get(playerId)?.add('maratonista');
+      if (count === maxMatches) earned.get(playerId)?.set('maratonista', 1);
     }
   }
 
@@ -72,22 +93,56 @@ export function computeAllPlayerAchievements(profiles, matches) {
   if (ranked.length > 0) {
     const bestRate = Math.max(...ranked.map((r) => r.winRate));
     for (const r of ranked) {
-      if (r.winRate === bestRate) earned.get(r.id)?.add('melhor_aproveitamento');
+      if (r.winRate === bestRate) earned.get(r.id)?.set('melhor_aproveitamento', 1);
     }
   }
 
   const result = new Map();
-  for (const [userId, ids] of earned) {
-    result.set(
-      userId,
-      [...ids].map((id) => getAchievement(id)).filter(Boolean),
-    );
+  for (const [userId, counts] of earned) {
+    result.set(userId, countsToList(counts));
   }
   return result;
 }
 
 export function getPlayerAchievements(achievementMap, playerId) {
   return achievementMap.get(playerId) ?? [];
+}
+
+function buildPreviewList(entries) {
+  return entries
+    .map(([id, count]) => {
+      const def = getAchievement(id);
+      return def ? { ...def, count } : null;
+    })
+    .filter(Boolean);
+}
+
+/**
+ * Pré-visualização local — injeta conquistas de exemplo para ver o layout no ranking.
+ * Só roda com `npm run dev`; não entra no build de produção.
+ */
+export function applyDevAchievementPreview(achievementMap, profiles) {
+  if (!import.meta.env.DEV) return achievementMap;
+
+  const player = profiles.find((p) => {
+    const name = `${p.nickname ?? ''} ${p.full_name ?? ''}`.toLowerCase();
+    return name.includes('gabriel');
+  });
+  if (!player) return achievementMap;
+
+  const preview = new Map(achievementMap);
+  preview.set(
+    player.id,
+    buildPreviewList([
+      ['invicto', 1],
+      ['em_chamas', 1],
+      ['maratonista', 1],
+      ['mestre', 2],
+      ['baldo', 3],
+      ['fracassado', 5],
+    ]),
+  );
+  return preview;
 }
 
 export { ACHIEVEMENTS };

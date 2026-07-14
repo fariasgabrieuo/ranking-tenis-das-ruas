@@ -76,7 +76,6 @@ export const APP = {
   rankingColumns: [
     { key: 'position', label: '#', width: '48px' },
     { key: 'nickname', label: 'Jogador' },
-    { key: 'location', label: 'Região' },
     { key: 'points', label: 'Pts' },
     { key: 'wins', label: 'V' },
     { key: 'losses', label: 'D' },

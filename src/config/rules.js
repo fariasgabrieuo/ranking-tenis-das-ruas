@@ -36,6 +36,9 @@ export const RULES = {
   /** Zona inferior do ranking (mínimo de jogadores para exibir) */
   cafeComLeite: {
     minPlayers: 5,
-    labels: ['Café com Leite', 'Leitinho'],
+    slots: [
+      { text: 'Café com Leite', icon: '☕', variant: 'cafe' },
+      { text: 'Leitinho', icon: '🥛', variant: 'leitinho' },
+    ],
   },
 };

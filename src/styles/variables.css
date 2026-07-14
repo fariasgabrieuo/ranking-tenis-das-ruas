@@ -27,6 +27,12 @@
   --color-silver: #9a9a9a;
   --color-bronze: #a0714f;
 
+  --color-coffee-dark: #6b4423;
+  --color-coffee: #9a6740;
+  --color-coffee-light: #c4a078;
+  --color-milk: #f0e6d8;
+  --color-milk-dark: #dcc9b0;
+
   --font-display: 'Oswald', 'Segoe UI', system-ui, sans-serif;
   /* Alternativa gratuita à Hestria — se tiver a fonte, adicione @font-face em main.css */
   --font-logo: 'Oswald', 'Segoe UI', system-ui, sans-serif;

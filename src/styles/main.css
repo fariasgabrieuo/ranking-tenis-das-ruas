@@ -237,7 +237,7 @@ tr:hover td {
 }
 
 .pos-num {
-  color: var(--color-clay);
+  color: var(--color-text);
   font-weight: 600;
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -657,7 +657,113 @@ select:focus {
 }
 
 .player-cell {
-  min-width: 8.5rem;
+  min-width: 6.5rem;
+}
+
+.player-link-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  text-align: left;
+  margin-bottom: 0.15rem;
+}
+
+.player-name {
+  line-height: 1.2;
+}
+
+.player-location {
+  display: block;
+  font-size: 0.78rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
+.player-achievements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.18rem;
+  line-height: 1.2;
+}
+
+.player-achievement-icons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.22rem 0.28rem;
+}
+
+.player-achievement-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: help;
+}
+
+.achievement-icon-svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+  flex-shrink: 0;
+}
+
+.achievement-count {
+  position: absolute;
+  top: -0.42em;
+  right: -0.48em;
+  min-width: 0.95em;
+  height: 0.95em;
+  padding: 0 0.18em;
+  background: var(--color-green-dark);
+  color: var(--color-white);
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 0.95em;
+  text-align: center;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--color-white);
+  pointer-events: none;
+}
+
+.achievement-badge,
+.achievement-item-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.achievement-badge {
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: help;
+}
+
+.achievement-item-badge {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.achievement-item-badge .achievement-count {
+  font-size: 0.58rem;
+  top: -0.35em;
+  right: -0.4em;
+}
+
+.player-cell-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .player-link {
@@ -683,12 +789,6 @@ select:focus {
   gap: 0.15rem;
   margin-left: 0.15rem;
   vertical-align: middle;
-}
-
-.achievement-badge {
-  font-size: 0.95rem;
-  line-height: 1;
-  cursor: help;
 }
 
 .achievement-more {
@@ -717,7 +817,7 @@ select:focus {
 }
 
 .achievement-item-icon {
-  font-size: 1.25rem;
+  flex-shrink: 0;
   line-height: 1;
 }
 
@@ -920,13 +1020,56 @@ select:focus {
   font-weight: 700;
 }
 
-.cafe-label {
-  display: inline-block;
+.ranking-row--with-cafe td {
+  border-bottom: none;
+  padding-bottom: 0.2rem;
+}
+
+.cafe-row-footer td {
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cafe-footer-bar {
+  padding: 0;
+  background: transparent;
+}
+
+.cafe-footer-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.14rem 0.85rem 0.22rem;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--color-clay);
-  margin-left: 0.35rem;
   font-style: italic;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  border-top: 1px solid var(--color-border);
+}
+
+.cafe-footer-icon {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.cafe-row-footer--cafe .cafe-footer-inner {
+  background: #e8d5c4;
+  color: #6b4423;
+}
+
+.cafe-row-footer--leitinho .cafe-footer-inner {
+  background: var(--color-cream-dark);
+  color: var(--color-text-muted);
+}
+
+.ranking-row--with-cafe:hover + .cafe-row-footer--cafe .cafe-footer-inner {
+  background: #dfc9b4;
+}
+
+.ranking-row--with-cafe:hover + .cafe-row-footer--leitinho .cafe-footer-inner {
+  background: #e8e0d6;
 }
 
 .regras-content h3 {
@@ -1014,5 +1157,16 @@ textarea {
   td {
     padding: 0.5rem;
     font-size: 0.88rem;
+  }
+
+  .player-achievement-icon {
+    font-size: 0.68rem;
+  }
+
+  .achievement-count {
+    font-size: 0.48rem;
+    min-width: 0.9em;
+    height: 0.9em;
+    line-height: 0.9em;
   }
 }

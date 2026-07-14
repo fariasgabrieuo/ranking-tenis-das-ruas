@@ -39,6 +39,18 @@ export const ACHIEVEMENTS = [
     description: 'Vitória por 6-0.',
     icon: '👑',
   },
+  {
+    id: 'baldo',
+    title: 'Baldo',
+    description: 'Perdeu de 6-0.',
+    icon: 'baldo',
+  },
+  {
+    id: 'fracassado',
+    title: 'Fracassado',
+    description: 'Perdeu sem ganhar o set.',
+    icon: '😢',
+  },
 ];
 
 export function getAchievement(id) {
