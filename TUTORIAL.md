@@ -86,9 +86,21 @@ Deve aparecer "Success". Isso cria `profiles`, `matches`, conquistas, timeline e
 
 1. No Supabase: **Authentication** → **Providers** → **Email**
 2. Deixe **Enable Email provider** ligado
-3. Para testes rápidos com amigos, você pode desligar **Confirm email** (senão cada um precisa clicar no link do e-mail)
+3. Para um grupo de amigos, **desligue Confirm email** (veja passo 4b.2 abaixo). O plano gratuito só envia **2 e-mails por hora** — com vários cadastros aparece `email rate limit exceeded`.
 
-### Passo 4b.1 — URLs de confirmação (importante para celular)
+### Passo 4b.2 — Desligar confirmação de e-mail (recomendado)
+
+Evita o erro de limite e cadastro funciona na hora no celular:
+
+1. Supabase → **Authentication**
+2. No menu lateral, clique em **Sign In / Providers** (ou **Configuration**)
+3. Procure **Confirm email** (pode estar no topo da página de configuração geral, não dentro de Email)
+4. **Desligue** Confirm email
+5. **Save**
+
+Se não achar: em **Authentication → Providers → Email**, role até o fim; ou use a busca do painel (Ctrl+K) por `confirm email`.
+
+### Passo 4b.1 — URLs de confirmação (só se Confirm email estiver ligado)
 
 Se a confirmação de e-mail falha no celular, configure:
 

@@ -6,6 +6,7 @@ import { computeAllPlayerAchievements, getPlayerAchievements, ACHIEVEMENTS } fro
 import { getProfileLocation } from './lib/profiles.js';
 import { parseSetScore, validateScoreForWinner } from './lib/scoreParser.js';
 import { getSession, signUp, signIn, signOut, onAuthStateChange, completeAuthFromUrl } from './lib/auth.js';
+import { formatAuthError } from './lib/authErrors.js';
 import {
   fetchProfiles,
   updateProfile,
@@ -847,18 +848,22 @@ function bindEvents() {
     try {
       if (state.authMode === 'login') {
         await signIn({ email, password });
+        showToast(APP.messages.saved);
       } else {
         const fullName = document.getElementById('full_name').value;
         const nickname = document.getElementById('nickname').value;
-        await signUp({ email, password, fullName, nickname });
-        showToast(APP.messages.checkEmail);
+        const result = await signUp({ email, password, fullName, nickname });
+        if (result.session) {
+          showToast(APP.messages.saved);
+        } else {
+          showToast(APP.messages.checkEmail);
+        }
       }
       await refreshSession();
       state.maisView = 'menu';
       await loadData();
-      showToast(APP.messages.saved);
     } catch (err) {
-      state.formError = err.message;
+      state.formError = formatAuthError(err);
       render();
     }
   });
