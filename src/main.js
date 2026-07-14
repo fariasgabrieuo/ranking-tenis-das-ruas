@@ -16,6 +16,7 @@ import {
   getProfileDisplayName,
   isAppAdmin,
   canCancelMatch,
+  canEditMatch,
 } from './lib/profiles.js';
 import {
   getConfigError,
@@ -23,6 +24,7 @@ import {
   addMatch,
   confirmMatch,
   rejectMatch,
+  updateMatch,
   deleteMatch,
   insertTimelineEvent,
   initSupabase,
@@ -42,6 +44,7 @@ const state = {
   loading: true,
   error: null,
   formError: null,
+  editingMatchId: null,
 };
 
 const medals = ['🥇', '🥈', '🥉'];
@@ -236,6 +239,57 @@ function renderRanking() {
   `;
 }
 
+function renderMatchEditForm(m) {
+  const p1 = getPlayerName(state.profiles, m.player1_id);
+  const p2 = getPlayerName(state.profiles, m.player2_id);
+  const formError =
+    state.formError && state.editingMatchId === m.id
+      ? `<div class="alert alert-error">${escapeHtml(state.formError)}</div>`
+      : '';
+
+  const typeOptions = Object.entries(RULES.matchTypes)
+    .map(
+      ([value, meta]) =>
+        `<option value="${value}"${m.match_type === value ? ' selected' : ''}>${escapeHtml(meta.label)}</option>`,
+    )
+    .join('');
+
+  return `
+    <li class="match-item match-item-editing">
+      ${formError}
+      <form class="match-edit-form form-grid" data-match-edit-form="${m.id}">
+        <p class="match-edit-players"><strong>${escapeHtml(p1)}</strong> vs <strong>${escapeHtml(p2)}</strong></p>
+        <div class="form-row">
+          <label for="edit-match-type-${m.id}">Tipo</label>
+          <select id="edit-match-type-${m.id}" required>${typeOptions}</select>
+        </div>
+        <div class="form-row">
+          <label>Placar do set</label>
+          <div class="score-boxes">
+            <div class="score-box">
+              <span class="score-box-label">Jogador 1</span>
+              <input id="edit-score-p1-${m.id}" type="number" min="0" max="7" inputmode="numeric" value="${m.player1_games}" required />
+            </div>
+            <span class="score-box-sep" aria-hidden="true">–</span>
+            <div class="score-box">
+              <span class="score-box-label">Jogador 2</span>
+              <input id="edit-score-p2-${m.id}" type="number" min="0" max="7" inputmode="numeric" value="${m.player2_games}" required />
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="edit-played-at-${m.id}">Data</label>
+          <input id="edit-played-at-${m.id}" type="date" value="${m.played_at}" required />
+        </div>
+        <div class="match-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-danger" data-cancel-match-edit>Descartar</button>
+        </div>
+      </form>
+    </li>
+  `;
+}
+
 function renderMatches() {
   if (state.matches.length === 0) {
     return `<p class="empty">${APP.messages.emptyMatches}</p>`;
@@ -245,6 +299,10 @@ function renderMatches() {
     <ul class="match-list">
       ${state.matches
         .map((m) => {
+          if (state.editingMatchId === m.id) {
+            return renderMatchEditForm(m);
+          }
+
           const p1 = getPlayerName(state.profiles, m.player1_id);
           const p2 = getPlayerName(state.profiles, m.player2_id);
           let result;
@@ -271,6 +329,7 @@ function renderMatches() {
             (m.player1_id === state.profile.id || m.player2_id === state.profile.id);
 
           const showCancel = canCancelMatch(m, state.profile);
+          const showEdit = canEditMatch(m, state.profile);
 
           const actionButtons = [];
           if (isOpponent) {
@@ -278,6 +337,9 @@ function renderMatches() {
               `<button class="btn btn-primary" data-confirm-match="${m.id}">Confirmar</button>`,
               `<button class="btn btn-danger" data-reject-match="${m.id}">Recusar</button>`,
             );
+          }
+          if (showEdit) {
+            actionButtons.push(`<button class="btn btn-primary" data-edit-match="${m.id}">Editar</button>`);
           }
           if (showCancel) {
             actionButtons.push(
@@ -1025,6 +1087,64 @@ function bindEvents() {
         showToast(APP.messages.saved);
       } catch (err) {
         state.error = formatSupabaseError(err);
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-edit-match]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.editingMatchId = btn.dataset.editMatch;
+      state.formError = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-cancel-match-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.editingMatchId = null;
+      state.formError = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-match-edit-form]').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!confirm(APP.messages.confirmEditMatch)) return;
+
+      const matchId = form.dataset.matchEditForm;
+      const match = state.matches.find((m) => m.id === matchId);
+      if (!match || !canEditMatch(match, state.profile)) return;
+
+      const scoreP1 = document.getElementById(`edit-score-p1-${matchId}`).value;
+      const scoreP2 = document.getElementById(`edit-score-p2-${matchId}`).value;
+      const parsed = parseSetScoreFromGames(scoreP1, scoreP2);
+      if (!parsed.ok) {
+        state.formError = parsed.error;
+        render();
+        return;
+      }
+
+      const winnerIsP1 = parsed.player1Games > parsed.player2Games;
+      const winner_id = winnerIsP1 ? match.player1_id : match.player2_id;
+
+      try {
+        await updateMatch(matchId, {
+          match_type: document.getElementById(`edit-match-type-${matchId}`).value,
+          winner_id,
+          score_display: parsed.scoreDisplay,
+          player1_games: parsed.player1Games,
+          player2_games: parsed.player2Games,
+          had_tiebreak: parsed.hadTiebreak,
+          played_at: document.getElementById(`edit-played-at-${matchId}`).value,
+        });
+        state.editingMatchId = null;
+        state.formError = null;
+        await loadData();
+        showToast(APP.messages.saved);
+      } catch (err) {
+        state.formError = formatSupabaseError(err);
         render();
       }
     });

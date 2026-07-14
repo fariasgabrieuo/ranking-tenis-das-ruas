@@ -10,8 +10,8 @@ export function formatSupabaseError(err) {
       );
     }
     return (
-      'Não foi possível confirmar a partida por uma regra de segurança no banco. ' +
-      'Peça ao admin para rodar o arquivo supabase/fix-match-confirm-rls.sql no Supabase.'
+      'Não foi possível alterar a partida. Peça ao admin para rodar fix-match-confirm-rls.sql ' +
+      'ou fix-match-edit-rls.sql no Supabase, conforme a ação.'
     );
   }
 

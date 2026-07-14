@@ -620,6 +620,23 @@ input[type='number']::-webkit-inner-spin-button {
   flex-wrap: wrap;
 }
 
+.match-item-editing {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.match-edit-form {
+  width: 100%;
+  gap: 0.85rem;
+}
+
+.match-edit-players {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-green-dark);
+}
+
 .mais-menu {
   list-style: none;
   margin: 0;

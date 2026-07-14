@@ -121,6 +121,27 @@ export async function rejectMatch(id) {
   return data;
 }
 
+export async function updateMatch(id, fields) {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('matches')
+    .update({
+      match_type: fields.match_type,
+      winner_id: fields.winner_id,
+      score_display: fields.score_display,
+      player1_games: fields.player1_games,
+      player2_games: fields.player2_games,
+      had_tiebreak: fields.had_tiebreak,
+      played_at: fields.played_at,
+    })
+    .eq('id', id)
+    .eq('status', 'confirmed')
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteMatch(id) {
   const supabase = await getSupabase();
   const { error } = await supabase.from('matches').delete().eq('id', id);

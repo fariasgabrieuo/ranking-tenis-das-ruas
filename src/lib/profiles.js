@@ -68,3 +68,8 @@ export function canCancelMatch(match, profile) {
   if (isAppAdmin(profile)) return true;
   return match.player1_id === profile.id || match.player2_id === profile.id;
 }
+
+export function canEditMatch(match, profile) {
+  if (!profile || !match || match.status !== 'confirmed') return false;
+  return canCancelMatch(match, profile);
+}

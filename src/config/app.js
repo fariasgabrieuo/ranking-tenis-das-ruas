@@ -102,6 +102,7 @@ export const APP = {
     confirmDeleteMatch: 'Cancelar esta partida? Ela será removida.',
     confirmDeleteConfirmedMatch:
       'Esta partida já está confirmada. Cancelar remove do ranking. Continuar?',
+    confirmEditMatch: 'Salvar alterações nesta partida confirmada?',
     saved: 'Salvo!',
     error: 'Algo deu errado. Tente de novo.',
     signedOut: 'Você saiu da conta.',
