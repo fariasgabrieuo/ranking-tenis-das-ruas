@@ -24,7 +24,7 @@ export const ACHIEVEMENTS = [
   {
     id: 'maratonista',
     title: 'Maratonista',
-    description: 'Maior número de partidas disputadas.',
+    description: 'Jogador com mais partidas no ranking (só um).',
     icon: '🎾',
   },
   {
@@ -48,7 +48,7 @@ export const ACHIEVEMENTS = [
   {
     id: 'fracassado',
     title: 'Fracassado',
-    description: 'Perdeu sem ganhar o set.',
+    description: '3 derrotas consecutivas.',
     icon: '😢',
   },
 ];

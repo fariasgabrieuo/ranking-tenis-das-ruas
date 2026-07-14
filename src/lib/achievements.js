@@ -40,7 +40,8 @@ function countsToList(countMap) {
  */
 export function computeAllPlayerAchievements(profiles, matches) {
   const earned = new Map(profiles.map((p) => [p.id, emptyCounts()]));
-  const streaks = new Map(profiles.map((p) => [p.id, 0]));
+  const winStreaks = new Map(profiles.map((p) => [p.id, 0]));
+  const loseStreaks = new Map(profiles.map((p) => [p.id, 0]));
   const matchCounts = new Map(profiles.map((p) => [p.id, 0]));
 
   const confirmed = confirmedMatches(matches);
@@ -64,10 +65,15 @@ export function computeAllPlayerAchievements(profiles, matches) {
       bump(earned.get(loserId), 'baldo');
     }
 
-    bump(earned.get(loserId), 'fracassado');
+    winStreaks.set(winnerId, (winStreaks.get(winnerId) ?? 0) + 1);
+    winStreaks.set(loserId, 0);
 
-    streaks.set(winnerId, (streaks.get(winnerId) ?? 0) + 1);
-    streaks.set(loserId, 0);
+    const nextLoseStreak = (loseStreaks.get(loserId) ?? 0) + 1;
+    loseStreaks.set(loserId, nextLoseStreak);
+    loseStreaks.set(winnerId, 0);
+    if (nextLoseStreak === 3) {
+      bump(earned.get(loserId), 'fracassado');
+    }
 
     matchCounts.set(winnerId, (matchCounts.get(winnerId) ?? 0) + 1);
     matchCounts.set(loserId, (matchCounts.get(loserId) ?? 0) + 1);
@@ -75,7 +81,7 @@ export function computeAllPlayerAchievements(profiles, matches) {
     processed.push(match);
   }
 
-  for (const [playerId, streak] of streaks) {
+  for (const [playerId, streak] of winStreaks) {
     const counts = earned.get(playerId);
     if (!counts) continue;
     if (streak >= 3) counts.set('em_chamas', 1);
@@ -84,9 +90,15 @@ export function computeAllPlayerAchievements(profiles, matches) {
 
   const maxMatches = Math.max(0, ...matchCounts.values());
   if (maxMatches > 0) {
-    for (const [playerId, count] of matchCounts) {
-      if (count === maxMatches) earned.get(playerId)?.set('maratonista', 1);
-    }
+    const leaders = [...matchCounts.entries()].filter(([, count]) => count === maxMatches);
+    const leaderId = leaders
+      .map(([id]) => id)
+      .sort((a, b) => {
+        const nameA = profiles.find((p) => p.id === a)?.nickname ?? '';
+        const nameB = profiles.find((p) => p.id === b)?.nickname ?? '';
+        return nameA.localeCompare(nameB, 'pt-BR');
+      })[0];
+    earned.get(leaderId)?.set('maratonista', 1);
   }
 
   const ranked = computeRanking(profiles, matches).filter((r) => r.matches > 0);
@@ -139,7 +151,7 @@ export function applyDevAchievementPreview(achievementMap, profiles) {
       ['maratonista', 1],
       ['mestre', 2],
       ['baldo', 3],
-      ['fracassado', 5],
+      ['fracassado', 2],
     ]),
   );
   return preview;
