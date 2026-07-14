@@ -45,12 +45,57 @@ const state = {
   error: null,
   formError: null,
   editingMatchId: null,
+  collapsedMatchDates: null,
 };
 
 const medals = ['🥇', '🥈', '🥉'];
 
 function formatDate(dateStr) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString(APP.locale, APP.dateFormat);
+}
+
+function formatDateHeading(dateStr) {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString(APP.locale, {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function groupMatchesByDate(matches) {
+  const map = new Map();
+  for (const match of matches) {
+    const date = match.played_at;
+    if (!map.has(date)) map.set(date, []);
+    map.get(date).push(match);
+  }
+
+  return [...map.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([date, items]) => ({
+      date,
+      matches: items.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at) || b.id.localeCompare(a.id),
+      ),
+    }));
+}
+
+function ensureMatchDateCollapseInit() {
+  if (state.collapsedMatchDates !== null) return;
+
+  state.collapsedMatchDates = new Set();
+  for (const { date, matches } of groupMatchesByDate(state.matches)) {
+    const hasPending = matches.some((m) => m.status === 'pending');
+    if (!hasPending) state.collapsedMatchDates.add(date);
+  }
+}
+
+function isMatchDateCollapsed(date, matches) {
+  if (state.editingMatchId && matches.some((m) => m.id === state.editingMatchId)) {
+    return false;
+  }
+  return state.collapsedMatchDates?.has(date) ?? false;
 }
 
 function showToast(message) {
@@ -290,79 +335,105 @@ function renderMatchEditForm(m) {
   `;
 }
 
+function renderMatchItem(m) {
+  if (state.editingMatchId === m.id) {
+    return renderMatchEditForm(m);
+  }
+
+  const p1 = getPlayerName(state.profiles, m.player1_id);
+  const p2 = getPlayerName(state.profiles, m.player2_id);
+  let result;
+
+  if (m.status === 'rejected') {
+    result = `${escapeHtml(p1)} vs ${escapeHtml(p2)} — <span class="draw-label">recusada</span>`;
+  } else if (m.winner_id) {
+    const winner = getPlayerName(state.profiles, m.winner_id);
+    const loser = m.winner_id === m.player1_id ? p2 : p1;
+    result = `<span class="winner">${escapeHtml(winner)}</span> venceu ${escapeHtml(loser)}`;
+  } else {
+    result = `${escapeHtml(p1)} vs ${escapeHtml(p2)}`;
+  }
+
+  const score = m.score_display ? `<span class="match-score">${escapeHtml(m.score_display)}</span>` : '';
+  const type = `<span class="match-type">${escapeHtml(matchTypeLabel(m.match_type))}</span>`;
+
+  const isOpponent =
+    state.profile &&
+    m.status === 'pending' &&
+    m.registered_by_id !== state.profile.id &&
+    (m.player1_id === state.profile.id || m.player2_id === state.profile.id);
+
+  const showCancel = canCancelMatch(m, state.profile);
+  const showEdit = canEditMatch(m, state.profile);
+
+  const actionButtons = [];
+  if (isOpponent) {
+    actionButtons.push(
+      `<button class="btn btn-primary" data-confirm-match="${m.id}">Confirmar</button>`,
+      `<button class="btn btn-danger" data-reject-match="${m.id}">Recusar</button>`,
+    );
+  }
+  if (showEdit) {
+    actionButtons.push(`<button class="btn btn-primary" data-edit-match="${m.id}">Editar</button>`);
+  }
+  if (showCancel) {
+    actionButtons.push(
+      `<button class="btn btn-danger" data-delete-match="${m.id}" data-match-status="${m.status}">Cancelar</button>`,
+    );
+  }
+  const actions =
+    actionButtons.length > 0 ? `<div class="match-actions">${actionButtons.join('')}</div>` : '';
+
+  return `
+    <li class="match-item${m.status === 'pending' ? ' match-item-pending' : ''}">
+      <div>
+        <div>${result} ${score} ${type} ${statusBadge(m.status)}</div>
+      </div>
+      ${actions}
+    </li>
+  `;
+}
+
 function renderMatches() {
   if (state.matches.length === 0) {
     return `<p class="empty">${APP.messages.emptyMatches}</p>`;
   }
 
+  ensureMatchDateCollapseInit();
+  const groups = groupMatchesByDate(state.matches);
+
   return `
-    <ul class="match-list">
-      ${state.matches
-        .map((m) => {
-          if (state.editingMatchId === m.id) {
-            return renderMatchEditForm(m);
-          }
-
-          const p1 = getPlayerName(state.profiles, m.player1_id);
-          const p2 = getPlayerName(state.profiles, m.player2_id);
-          let result;
-
-          if (m.status === 'rejected') {
-            result = `${escapeHtml(p1)} vs ${escapeHtml(p2)} — <span class="draw-label">recusada</span>`;
-          } else if (m.winner_id) {
-            const winner = getPlayerName(state.profiles, m.winner_id);
-            const loser = m.winner_id === m.player1_id ? p2 : p1;
-            result = `<span class="winner">${escapeHtml(winner)}</span> venceu ${escapeHtml(loser)}`;
-          } else {
-            result = `${escapeHtml(p1)} vs ${escapeHtml(p2)}`;
-          }
-
-          const score = m.score_display
-            ? `<span class="match-score">${escapeHtml(m.score_display)}</span>`
-            : '';
-          const type = `<span class="match-type">${escapeHtml(matchTypeLabel(m.match_type))}</span>`;
-
-          const isOpponent =
-            state.profile &&
-            m.status === 'pending' &&
-            m.registered_by_id !== state.profile.id &&
-            (m.player1_id === state.profile.id || m.player2_id === state.profile.id);
-
-          const showCancel = canCancelMatch(m, state.profile);
-          const showEdit = canEditMatch(m, state.profile);
-
-          const actionButtons = [];
-          if (isOpponent) {
-            actionButtons.push(
-              `<button class="btn btn-primary" data-confirm-match="${m.id}">Confirmar</button>`,
-              `<button class="btn btn-danger" data-reject-match="${m.id}">Recusar</button>`,
-            );
-          }
-          if (showEdit) {
-            actionButtons.push(`<button class="btn btn-primary" data-edit-match="${m.id}">Editar</button>`);
-          }
-          if (showCancel) {
-            actionButtons.push(
-              `<button class="btn btn-danger" data-delete-match="${m.id}" data-match-status="${m.status}">Cancelar</button>`,
-            );
-          }
-          const actions =
-            actionButtons.length > 0
-              ? `<div class="match-actions">${actionButtons.join('')}</div>`
+    <div class="match-date-groups">
+      ${groups
+        .map(({ date, matches }) => {
+          const collapsed = isMatchDateCollapsed(date, matches);
+          const pendingCount = matches.filter((m) => m.status === 'pending').length;
+          const pendingBadge =
+            pendingCount > 0
+              ? `<span class="match-date-alert" title="${pendingCount} partida(s) pendente(s)"><span class="match-date-alert-dot" aria-hidden="true"></span>${pendingCount > 1 ? `<span class="match-date-alert-count">${pendingCount}</span>` : ''}</span>`
               : '';
 
           return `
-            <li class="match-item">
-              <div>
-                <div>${result} ${score} ${type} ${statusBadge(m.status)}</div>
-                <div class="match-meta">${formatDate(m.played_at)}</div>
-              </div>
-              ${actions}
-            </li>
+            <section class="match-date-group${collapsed ? ' is-collapsed' : ''}">
+              <button
+                type="button"
+                class="match-date-toggle"
+                data-toggle-match-date="${date}"
+                aria-expanded="${!collapsed}"
+              >
+                <span class="match-date-chevron" aria-hidden="true">${collapsed ? '▸' : '▾'}</span>
+                <span class="match-date-label">${escapeHtml(formatDateHeading(date))}</span>
+                <span class="match-date-meta">${matches.length} partida${matches.length === 1 ? '' : 's'}</span>
+                ${pendingBadge}
+              </button>
+              <ul class="match-list match-list-nested">
+                ${matches.map((m) => renderMatchItem(m)).join('')}
+              </ul>
+            </section>
           `;
         })
         .join('')}
-    </ul>
+    </div>
   `;
 }
 
@@ -1089,6 +1160,19 @@ function bindEvents() {
         state.error = formatSupabaseError(err);
         render();
       }
+    });
+  });
+
+  document.querySelectorAll('[data-toggle-match-date]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const date = btn.dataset.toggleMatchDate;
+      if (!state.collapsedMatchDates) state.collapsedMatchDates = new Set();
+      if (state.collapsedMatchDates.has(date)) {
+        state.collapsedMatchDates.delete(date);
+      } else {
+        state.collapsedMatchDates.add(date);
+      }
+      render();
     });
   });
 
