@@ -99,7 +99,9 @@ export const APP = {
     loginRequired: 'Entre na sua conta para registrar partidas.',
     confirmMatch: 'Confirmar esta partida?',
     rejectMatch: 'Recusar esta partida?',
-    confirmDeleteMatch: 'Remover esta partida pendente?',
+    confirmDeleteMatch: 'Cancelar esta partida? Ela será removida.',
+    confirmDeleteConfirmedMatch:
+      'Esta partida já está confirmada. Cancelar remove do ranking. Continuar?',
     saved: 'Salvo!',
     error: 'Algo deu errado. Tente de novo.',
     signedOut: 'Você saiu da conta.',

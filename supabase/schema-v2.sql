@@ -18,6 +18,7 @@ create table if not exists profiles (
   bairro text,
   cidade text,
   about text,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_nickname_unique unique (nickname)
@@ -134,7 +135,12 @@ create policy "Profiles are viewable by everyone"
 
 drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can update own profile"
-  on profiles for update using (auth.uid() = id);
+  on profiles for update
+  using (auth.uid() = id)
+  with check (
+    auth.uid() = id
+    and is_admin = (select p.is_admin from profiles p where p.id = auth.uid())
+  );
 
 -- Partidas
 drop policy if exists "Matches are viewable by everyone" on matches;
@@ -166,9 +172,14 @@ create policy "Opponent can confirm or reject"
   );
 
 drop policy if exists "Registrar can delete pending match" on matches;
-create policy "Registrar can delete pending match"
+drop policy if exists "Participants or admin can delete matches" on matches;
+create policy "Participants or admin can delete matches"
   on matches for delete using (
-    auth.uid() = registered_by_id and status = 'pending'
+    auth.uid() in (player1_id, player2_id)
+    or exists (
+      select 1 from profiles p
+      where p.id = auth.uid() and p.is_admin is true
+    )
   );
 
 -- Snapshots / conquistas / timeline (leitura pública por enquanto)

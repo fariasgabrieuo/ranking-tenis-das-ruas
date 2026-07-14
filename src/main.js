@@ -14,6 +14,8 @@ import {
   updateProfile,
   uploadAvatar,
   getProfileDisplayName,
+  isAppAdmin,
+  canCancelMatch,
 } from './lib/profiles.js';
 import {
   getConfigError,
@@ -268,20 +270,24 @@ function renderMatches() {
             m.registered_by_id !== state.profile.id &&
             (m.player1_id === state.profile.id || m.player2_id === state.profile.id);
 
-          const isRegistrar =
-            state.profile && m.status === 'pending' && m.registered_by_id === state.profile.id;
+          const showCancel = canCancelMatch(m, state.profile);
 
-          let actions = '';
+          const actionButtons = [];
           if (isOpponent) {
-            actions = `
-              <div class="match-actions">
-                <button class="btn btn-primary" data-confirm-match="${m.id}">Confirmar</button>
-                <button class="btn btn-danger" data-reject-match="${m.id}">Recusar</button>
-              </div>
-            `;
-          } else if (isRegistrar) {
-            actions = `<button class="btn btn-danger" data-delete-match="${m.id}">Cancelar</button>`;
+            actionButtons.push(
+              `<button class="btn btn-primary" data-confirm-match="${m.id}">Confirmar</button>`,
+              `<button class="btn btn-danger" data-reject-match="${m.id}">Recusar</button>`,
+            );
           }
+          if (showCancel) {
+            actionButtons.push(
+              `<button class="btn btn-danger" data-delete-match="${m.id}" data-match-status="${m.status}">Cancelar</button>`,
+            );
+          }
+          const actions =
+            actionButtons.length > 0
+              ? `<div class="match-actions">${actionButtons.join('')}</div>`
+              : '';
 
           return `
             <li class="match-item">
@@ -1026,7 +1032,9 @@ function bindEvents() {
 
   document.querySelectorAll('[data-delete-match]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm(APP.messages.confirmDeleteMatch)) return;
+      const isConfirmed = btn.dataset.matchStatus === 'confirmed';
+      const message = isConfirmed ? APP.messages.confirmDeleteConfirmedMatch : APP.messages.confirmDeleteMatch;
+      if (!confirm(message)) return;
       try {
         await deleteMatch(btn.dataset.deleteMatch);
         await loadData();

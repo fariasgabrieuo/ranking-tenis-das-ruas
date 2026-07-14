@@ -58,3 +58,13 @@ export function getProfileLocation(profile) {
 export function getProfileDisplayName(profile) {
   return profile?.nickname || profile?.full_name || '—';
 }
+
+export function isAppAdmin(profile) {
+  return profile?.is_admin === true;
+}
+
+export function canCancelMatch(match, profile) {
+  if (!profile || !match) return false;
+  if (isAppAdmin(profile)) return true;
+  return match.player1_id === profile.id || match.player2_id === profile.id;
+}
