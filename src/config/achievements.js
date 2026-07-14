@@ -1,30 +1,43 @@
 /**
- * Definições de conquistas — lógica de desbloqueio virá nas fases seguintes.
+ * Conquistas — desbloqueio automático virá na próxima fase.
+ * Aparecerão no perfil do jogador e no glossário em Mais → Regras.
  */
 export const ACHIEVEMENTS = [
   {
-    id: 'first_win',
-    title: 'Primeira Vitória',
-    description: 'Venceu sua primeira partida confirmada.',
-    icon: '🎾',
+    id: 'invicto',
+    title: 'Invicto',
+    description: '6 vitórias consecutivas.',
+    icon: '🏆',
   },
   {
-    id: 'streak_3',
-    title: 'Trinca',
-    description: 'Três vitórias seguidas.',
+    id: 'em_chamas',
+    title: 'Em Chamas',
+    description: '3 vitórias consecutivas.',
     icon: '🔥',
   },
   {
-    id: 'clay_king',
-    title: 'Rei do Saibro',
-    description: '10 vitórias valendo no ranking.',
-    icon: '👑',
+    id: 'carrasco',
+    title: 'Carrasco',
+    description: 'Vitória contra o líder do ranking.',
+    icon: '💀',
   },
   {
-    id: 'tiebreak_hero',
-    title: 'Herói do Tie-break',
-    description: 'Venceu um set 7-6.',
-    icon: '💪',
+    id: 'maratonista',
+    title: 'Maratonista',
+    description: 'Maior número de partidas disputadas.',
+    icon: '🎾',
+  },
+  {
+    id: 'melhor_aproveitamento',
+    title: 'Melhor Aproveitamento',
+    description: 'Melhor percentual de vitórias.',
+    icon: '🎯',
+  },
+  {
+    id: 'mestre',
+    title: 'Mestre',
+    description: 'Vitória por 6-0.',
+    icon: '👑',
   },
 ];
 

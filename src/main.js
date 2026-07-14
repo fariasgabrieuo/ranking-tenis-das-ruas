@@ -125,7 +125,7 @@ function renderRanking() {
 
   return `
     <p class="match-meta" style="margin-bottom:1rem">
-      Valendo: <strong>${RULES.points.rankedWin} pts</strong> · Livre: <strong>${RULES.points.friendlyWin} pt</strong> · Só entram partidas confirmadas
+      ${escapeHtml(RULES.matchTypes.ranked.label)}: <strong>${RULES.points.rankedWin} pts</strong> · ${escapeHtml(RULES.matchTypes.friendly.label)}: <strong>${RULES.points.friendlyWin} pt</strong> · Só entram partidas confirmadas
     </p>
     <div class="table-wrap">
       <table>
@@ -408,8 +408,8 @@ function renderRegras() {
       </ul>
       <h3>Pontuação</h3>
       <ul>
-        <li><strong>Valendo:</strong> ${RULES.points.rankedWin} pontos por vitória</li>
-        <li><strong>Livre:</strong> ${RULES.points.friendlyWin} ponto por vitória</li>
+        <li><strong>${escapeHtml(RULES.matchTypes.ranked.label)}:</strong> ${RULES.points.rankedWin} pontos por vitória</li>
+        <li><strong>${escapeHtml(RULES.matchTypes.friendly.label)}:</strong> ${RULES.points.friendlyWin} ponto por vitória</li>
         <li>Derrota: ${RULES.points.loss} pontos</li>
       </ul>
       <h3>Desempate no ranking</h3>
