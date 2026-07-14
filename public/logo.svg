@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <circle cx="60" cy="60" r="56" stroke="#c87941" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="60" cy="60" r="44" stroke="#1a4d32" stroke-width="1"/>
+  <!-- raquete minimalista -->
+  <ellipse cx="60" cy="52" rx="18" ry="22" stroke="#1a4d32" stroke-width="2" fill="none"/>
+  <line x1="60" y1="74" x2="60" y2="98" stroke="#1a4d32" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="48" y1="44" x2="72" y2="44" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <line x1="48" y1="52" x2="72" y2="52" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <line x1="48" y1="60" x2="72" y2="60" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <line x1="52" y1="38" x2="52" y2="66" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <line x1="60" y1="36" x2="60" y2="68" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <line x1="68" y1="38" x2="68" y2="66" stroke="#1a4d32" stroke-width="1" opacity="0.5"/>
+  <!-- bola -->
+  <circle cx="88" cy="32" r="10" fill="#c87941" opacity="0.9"/>
+  <path d="M82 28c4 2 8 2 12 0M82 36c4-2 8-2 12 0" stroke="#faf8f5" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

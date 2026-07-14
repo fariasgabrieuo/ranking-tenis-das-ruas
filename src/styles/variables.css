@@ -1,0 +1,43 @@
+/**
+ * Tema Roland Garros — verde quadra, terracota saibro, tipografia clássica.
+ */
+:root {
+  --color-green-dark: #1a4d32;
+  --color-green: #2d6a4f;
+  --color-green-light: #40916c;
+  --color-green-band: #3a8560;
+  --color-clay: #c87941;
+  --color-clay-light: #e8a87c;
+  --color-cream: #faf8f5;
+  --color-cream-dark: #f0ebe3;
+  --color-white: #ffffff;
+  --color-text: #1c1c1c;
+  --color-text-muted: #5c5c5c;
+  --color-border: #d9d2c8;
+
+  --color-bg: var(--color-green);
+  --color-surface: var(--color-cream);
+  --color-surface-hover: var(--color-white);
+  --color-primary: var(--color-green-dark);
+  --color-primary-hover: var(--color-green);
+  --color-accent: var(--color-clay);
+  --color-accent-hover: #b06835;
+  --color-danger: #6b5344;
+  --color-gold: #c9a227;
+  --color-silver: #9a9a9a;
+  --color-bronze: #a0714f;
+
+  --font-display: 'Oswald', 'Segoe UI', system-ui, sans-serif;
+  /* Alternativa gratuita à Hestria — se tiver a fonte, adicione @font-face em main.css */
+  --font-logo: 'Oswald', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --font-family: var(--font-body);
+
+  --font-size-base: 15px;
+  --radius: 6px;
+  --radius-sm: 4px;
+  --shadow: 0 1px 3px rgba(26, 77, 50, 0.08);
+  --shadow-md: 0 4px 16px rgba(26, 77, 50, 0.1);
+  --max-width: 880px;
+  --spacing: 1.25rem;
+}
