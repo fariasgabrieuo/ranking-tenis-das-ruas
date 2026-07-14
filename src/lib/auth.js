@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase.js';
+import { getAppBaseUrl } from './siteUrl.js';
 
 export async function getSession() {
   const supabase = await getSupabase();
@@ -13,6 +14,7 @@ export async function signUp({ email, password, fullName, nickname }) {
     email: email.trim(),
     password,
     options: {
+      emailRedirectTo: getAppBaseUrl(),
       data: {
         full_name: fullName.trim(),
         nickname: nickname.trim(),
@@ -45,4 +47,33 @@ export async function onAuthStateChange(callback) {
     callback(session);
   });
   return data.subscription;
+}
+
+/** Processa retorno do link de confirmação de e-mail (hash ou ?code= na URL). */
+export async function completeAuthFromUrl() {
+  const supabase = await getSupabase();
+  const searchParams = new URLSearchParams(window.location.search);
+  const code = searchParams.get('code');
+
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    window.history.replaceState(null, '', `${window.location.origin}${window.location.pathname}`);
+    return { handled: true, session: data.session, authType: searchParams.get('type') };
+  }
+
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+
+  if (!hashParams.has('access_token') && !hashParams.has('type')) {
+    return { handled: false, session: null };
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+
+  window.history.replaceState(null, '', `${window.location.origin}${window.location.pathname}`);
+  return { handled: true, session: data.session, authType: hashParams.get('type') };
 }

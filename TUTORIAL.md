@@ -88,6 +88,27 @@ Deve aparecer "Success". Isso cria `profiles`, `matches`, conquistas, timeline e
 2. Deixe **Enable Email provider** ligado
 3. Para testes rápidos com amigos, você pode desligar **Confirm email** (senão cada um precisa clicar no link do e-mail)
 
+### Passo 4b.1 — URLs de confirmação (importante para celular)
+
+Se a confirmação de e-mail falha no celular, configure:
+
+1. Supabase → **Authentication** → **URL Configuration**
+2. **Site URL:** `https://SEU-USUARIO.github.io/ranking-tenis-das-ruas/`
+3. **Redirect URLs** — adicione estas linhas (uma por linha):
+
+```
+https://SEU-USUARIO.github.io/ranking-tenis-das-ruas/
+https://SEU-USUARIO.github.io/ranking-tenis-das-ruas/*
+http://localhost:5173/
+http://localhost:5174/
+```
+
+4. Clique **Save**
+
+> Troque `SEU-USUARIO` pelo seu usuário GitHub (ex: `fariasgabrieuo`).
+
+**Dica para quem confirma no celular:** se der erro, abra o link do e-mail no **Chrome ou Safari** (ícone “Abrir no navegador”), não dentro do app do Gmail/WhatsApp.
+
 ### Passo 4c — Storage de avatares (opcional)
 
 O `schema-v2.sql` já cria o bucket `avatars`. Confira em **Storage** se o bucket apareceu com acesso público para leitura.

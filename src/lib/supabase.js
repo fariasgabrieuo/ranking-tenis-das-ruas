@@ -23,7 +23,14 @@ async function ensureClient() {
       ) {
         configError = 'Configure src/supabase-config.js com sua URL e Publishable key do Supabase';
       } else {
-        client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            detectSessionInUrl: true,
+            persistSession: true,
+            autoRefreshToken: true,
+            flowType: 'pkce',
+          },
+        });
       }
     } catch {
       configError = 'Arquivo src/supabase-config.js não encontrado. Copie de supabase-config.example.js';

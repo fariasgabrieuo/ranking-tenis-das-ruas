@@ -105,5 +105,8 @@ export const APP = {
     error: 'Algo deu errado. Tente de novo.',
     signedOut: 'Você saiu da conta.',
     checkEmail: 'Verifique seu e-mail para confirmar o cadastro (se exigido pelo Supabase).',
+    emailConfirmed: 'E-mail confirmado! Você já pode usar o app.',
+    emailConfirmFailed:
+      'Não foi possível confirmar o e-mail. Abra o link no Chrome/Safari (não no app do Gmail) ou peça um novo cadastro.',
   },
 };

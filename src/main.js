@@ -5,7 +5,7 @@ import { computeRanking, getPlayerName, getCafeComLeiteZone } from './lib/rankin
 import { computeAllPlayerAchievements, getPlayerAchievements, ACHIEVEMENTS } from './lib/achievements.js';
 import { getProfileLocation } from './lib/profiles.js';
 import { parseSetScore, validateScoreForWinner } from './lib/scoreParser.js';
-import { getSession, signUp, signIn, signOut, onAuthStateChange } from './lib/auth.js';
+import { getSession, signUp, signIn, signOut, onAuthStateChange, completeAuthFromUrl } from './lib/auth.js';
 import {
   fetchProfiles,
   updateProfile,
@@ -1021,6 +1021,19 @@ async function loadData() {
   render();
 
   try {
+    try {
+      const authResult = await completeAuthFromUrl();
+      if (authResult.handled) {
+        if (authResult.session) {
+          showToast(APP.messages.emailConfirmed);
+        } else {
+          state.error = APP.messages.emailConfirmFailed;
+        }
+      }
+    } catch (authErr) {
+      state.error = authErr.message ?? APP.messages.emailConfirmFailed;
+    }
+
     await refreshSession();
     const [profiles, matches] = await Promise.all([fetchProfiles(), fetchMatches()]);
     state.profiles = profiles;
