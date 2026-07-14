@@ -43,7 +43,7 @@ export const ACHIEVEMENTS = [
     id: 'baldo',
     title: 'Baldo',
     description: 'Perdeu de 6-0.',
-    icon: 'baldo',
+    icon: '🪣',
   },
   {
     id: 'fracassado',
