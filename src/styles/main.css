@@ -525,6 +525,259 @@ select:focus {
   gap: 0.65rem;
 }
 
+.mais-greeting {
+  margin: 0 0 1rem;
+}
+
+.mais-section {
+  margin-bottom: 1.35rem;
+}
+
+.mais-section:last-child {
+  margin-bottom: 0;
+}
+
+.mais-section-title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.mais-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.mais-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-cream-dark);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.mais-card:hover {
+  background: var(--color-white);
+  border-color: var(--color-green);
+  box-shadow: var(--shadow);
+}
+
+.mais-card-danger {
+  border-color: rgba(107, 83, 68, 0.35);
+}
+
+.mais-card-danger:hover {
+  border-color: var(--color-danger);
+  background: #faf5f0;
+}
+
+.mais-card-icon {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.mais-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.mais-card-title {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-green-dark);
+  line-height: 1.2;
+}
+
+.mais-card-desc {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.mais-link {
+  width: auto;
+  text-align: left;
+}
+
+.player-cell {
+  min-width: 8.5rem;
+}
+
+.player-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.player-link:hover strong {
+  color: var(--color-clay);
+  text-decoration: underline;
+}
+
+.achievement-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.15rem;
+  vertical-align: middle;
+}
+
+.achievement-badge {
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: help;
+}
+
+.achievement-more {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.achievement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--color-cream-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.achievement-item-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.profile-subtitle {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--color-green-dark);
+}
+
+.profile-achievements-block {
+  margin-bottom: 1.25rem;
+}
+
+.public-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.public-profile-name {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--color-green-dark);
+}
+
+.profile-about {
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  background: var(--color-cream-dark);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.profile-stats span {
+  font-size: 0.88rem;
+}
+
+.conquistas-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.conquista-card {
+  padding: 0.85rem 1rem;
+  background: var(--color-cream-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.conquista-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.conquista-card-head h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-green-dark);
+}
+
+.conquista-icon {
+  font-size: 1.25rem;
+}
+
+.conquista-holders {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+}
+
+.holder-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--color-green-dark);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.compact-match-list .match-item {
+  padding: 0.5rem 0;
+  font-size: 0.88rem;
+}
+
 .mais-link {
   width: 100%;
   text-align: left;
@@ -664,6 +917,10 @@ textarea {
 }
 
 @media (max-width: 600px) {
+  .mais-grid {
+    grid-template-columns: 1fr;
+  }
+
   .header {
     margin-top: 0.3cm;
     padding: 0.5cm var(--spacing);

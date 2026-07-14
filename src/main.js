@@ -2,6 +2,8 @@ import './styles/main.css';
 import { APP } from './config/app.js';
 import { RULES } from './config/rules.js';
 import { computeRanking, getPlayerName, getCafeComLeiteZone } from './lib/ranking.js';
+import { computeAllPlayerAchievements, getPlayerAchievements, ACHIEVEMENTS } from './lib/achievements.js';
+import { getProfileLocation } from './lib/profiles.js';
 import { parseSetScore, validateScoreForWinner } from './lib/scoreParser.js';
 import { getSession, signUp, signIn, signOut, onAuthStateChange } from './lib/auth.js';
 import {
@@ -27,6 +29,9 @@ const state = {
   authMode: 'login',
   profiles: [],
   matches: [],
+  achievementMap: new Map(),
+  viewProfileId: null,
+  viewProfileFromRanking: false,
   session: null,
   profile: null,
   loading: true,
@@ -72,6 +77,51 @@ function matchTypeLabel(type) {
   return RULES.matchTypes[type]?.label ?? type;
 }
 
+function renderAchievementBadges(playerId, { compact = true } = {}) {
+  const list = getPlayerAchievements(state.achievementMap, playerId);
+  if (list.length === 0) return '';
+
+  const shown = compact ? list.slice(0, 3) : list;
+  const extra = compact && list.length > 3 ? `<span class="achievement-more">+${list.length - 3}</span>` : '';
+
+  return `<span class="achievement-badges">${shown
+    .map(
+      (a) =>
+        `<span class="achievement-badge" title="${escapeHtml(`${a.title} — ${a.description}`)}">${a.icon}</span>`,
+    )
+    .join('')}${extra}</span>`;
+}
+
+function renderAchievementList(playerId) {
+  const list = getPlayerAchievements(state.achievementMap, playerId);
+  if (list.length === 0) {
+    return '<p class="match-meta">Nenhuma conquista ainda.</p>';
+  }
+
+  return `<ul class="achievement-list">${list
+    .map(
+      (a) => `
+      <li class="achievement-item">
+        <span class="achievement-item-icon">${a.icon}</span>
+        <div>
+          <strong>${escapeHtml(a.title)}</strong>
+          <p class="match-meta">${escapeHtml(a.description)}</p>
+        </div>
+      </li>
+    `,
+    )
+    .join('')}</ul>`;
+}
+
+function openPublicProfile(playerId, fromRanking = false) {
+  state.tab = 'mais';
+  state.maisView = 'jogador';
+  state.viewProfileId = playerId;
+  state.viewProfileFromRanking = fromRanking;
+  state.formError = null;
+  render();
+}
+
 function renderConfigError() {
   return `
     <div class="alert alert-error">
@@ -109,7 +159,13 @@ function renderRanking() {
             case 'position':
               return `<td>${medalForPosition(p.position)}</td>`;
             case 'nickname':
-              return `<td><strong>${escapeHtml(p.nickname)}</strong> ${cafeLabel}</td>`;
+              return `<td class="player-cell">
+                <button type="button" class="player-link" data-view-profile="${p.id}">
+                  <strong>${escapeHtml(p.nickname)}</strong>
+                </button>
+                ${renderAchievementBadges(p.id)}
+                ${cafeLabel}
+              </td>`;
             case 'location':
               return `<td>${escapeHtml(p.location)}</td>`;
             case 'winRate':
@@ -285,13 +341,59 @@ function renderMaisMenu() {
   const loggedIn = !!state.session;
   const name = state.profile ? getProfileDisplayName(state.profile) : '';
 
+  const sections = [
+    { id: 'conta', label: 'Conta' },
+    { id: 'ranking', label: 'Ranking' },
+  ];
+
   return `
-    ${loggedIn ? `<p class="match-meta">Logado como <strong>${escapeHtml(name)}</strong></p>` : ''}
-    <ul class="mais-menu">
-      <li><button class="btn btn-primary mais-link" data-mais-view="perfil">${loggedIn ? 'Meu perfil' : 'Meu perfil (requer login)'}</button></li>
-      <li><button class="btn btn-primary mais-link" data-mais-view="regras">Regras do ranking</button></li>
-      <li><button class="btn btn-primary mais-link" data-mais-view="auth">${loggedIn ? 'Sair da conta' : 'Entrar / Cadastrar'}</button></li>
-    </ul>
+    ${loggedIn ? `<p class="match-meta mais-greeting">Olá, <strong>${escapeHtml(name)}</strong></p>` : ''}
+    ${sections
+      .map((section) => {
+        const items = APP.maisMenu.filter((item) => {
+          if (item.section !== section.id) return false;
+          if (item.hideWhenLoggedIn && loggedIn) return false;
+          if (item.requiresLogin && !loggedIn) return false;
+          if (item.isLogout && !loggedIn) return false;
+          return true;
+        });
+        if (items.length === 0) return '';
+
+        return `
+          <div class="mais-section">
+            <h3 class="mais-section-title">${section.label}</h3>
+            <div class="mais-grid">
+              ${items
+                .map((item) => {
+                  if (item.isLogout) {
+                    return `
+                      <button type="button" class="mais-card mais-card-danger" id="sign-out-btn">
+                        <span class="mais-card-icon">${item.icon}</span>
+                        <span class="mais-card-body">
+                          <span class="mais-card-title">${item.title}</span>
+                          <span class="mais-card-desc">${item.desc}</span>
+                        </span>
+                      </button>
+                    `;
+                  }
+                  const title =
+                    item.view === 'perfil' && !loggedIn ? 'Entrar para editar perfil' : item.title;
+                  return `
+                    <button type="button" class="mais-card mais-link" data-mais-view="${item.view}">
+                      <span class="mais-card-icon">${item.icon}</span>
+                      <span class="mais-card-body">
+                        <span class="mais-card-title">${escapeHtml(title)}</span>
+                        <span class="mais-card-desc">${escapeHtml(item.desc)}</span>
+                      </span>
+                    </button>
+                  `;
+                })
+                .join('')}
+            </div>
+          </div>
+        `;
+      })
+      .join('')}
   `;
 }
 
@@ -366,6 +468,10 @@ function renderProfileForm() {
   return `
     ${formError}
     <div class="profile-header">${avatar}</div>
+    <div class="profile-achievements-block">
+      <h3 class="profile-subtitle">Conquistas</h3>
+      ${renderAchievementList(p.id)}
+    </div>
     <form class="form-grid" id="profile-form">
       <div class="form-row">
         <label for="avatar">Foto</label>
@@ -421,6 +527,124 @@ function renderRegras() {
       </ol>
       <h3>Zona inferior</h3>
       <p>Com ${RULES.cafeComLeite.minPlayers}+ jogadores, os 2 últimos ganham os rótulos <em>Café com Leite</em> e <em>Leitinho</em>.</p>
+      <p class="match-meta">Veja quem desbloqueou cada conquista em <strong>Mais → Conquistas</strong>.</p>
+    </div>
+  `;
+}
+
+function renderConquistas() {
+  return `
+    <div class="conquistas-content">
+      <p class="match-meta" style="margin-bottom:1rem">Conquistas são públicas — calculadas automaticamente a partir das partidas confirmadas.</p>
+      <div class="conquistas-grid">
+        ${ACHIEVEMENTS.map((a) => {
+          const holders = state.profiles.filter((p) =>
+            getPlayerAchievements(state.achievementMap, p.id).some((x) => x.id === a.id),
+          );
+          const holderList =
+            holders.length > 0
+              ? holders
+                  .map(
+                    (p) =>
+                      `<button type="button" class="holder-link" data-view-profile="${p.id}">${escapeHtml(p.nickname)}</button>`,
+                  )
+                  .join(', ')
+              : '<span class="draw-label">Ninguém ainda</span>';
+
+          return `
+            <article class="conquista-card">
+              <div class="conquista-card-head">
+                <span class="conquista-icon">${a.icon}</span>
+                <h4>${escapeHtml(a.title)}</h4>
+              </div>
+              <p class="match-meta">${escapeHtml(a.description)}</p>
+              <p class="conquista-holders"><strong>Jogadores:</strong> ${holderList}</p>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderPublicProfile() {
+  const profile = state.profiles.find((p) => p.id === state.viewProfileId);
+  if (!profile) {
+    return `<p class="empty">Jogador não encontrado.</p>`;
+  }
+
+  const stats = computeRanking(state.profiles, state.matches).find((r) => r.id === profile.id);
+  const avatar = profile.avatar_url
+    ? `<img class="profile-avatar" src="${escapeHtml(profile.avatar_url)}" alt="" width="96" height="96" />`
+    : `<div class="profile-avatar profile-avatar-placeholder">${escapeHtml(profile.nickname?.[0]?.toUpperCase() ?? '?')}</div>`;
+
+  const about = profile.about
+    ? `<p class="profile-about">${escapeHtml(profile.about)}</p>`
+    : '<p class="match-meta">Sem descrição.</p>';
+
+  const recentMatches = state.matches
+    .filter(
+      (m) =>
+        m.status === 'confirmed' &&
+        (m.player1_id === profile.id || m.player2_id === profile.id),
+    )
+    .slice(0, 5);
+
+  const matchHistory =
+    recentMatches.length === 0
+      ? '<p class="match-meta">Nenhuma partida confirmada ainda.</p>'
+      : `<ul class="match-list compact-match-list">${recentMatches
+          .map((m) => {
+            const won = m.winner_id === profile.id;
+            const opponentId = m.player1_id === profile.id ? m.player2_id : m.player1_id;
+            const opponent = getPlayerName(state.profiles, opponentId);
+            return `
+              <li class="match-item">
+                <span class="${won ? 'winner' : 'draw-label'}">${won ? 'V' : 'D'}</span>
+                vs ${escapeHtml(opponent)}
+                <span class="match-score">${escapeHtml(m.score_display)}</span>
+                <span class="match-meta">${formatDate(m.played_at)}</span>
+              </li>
+            `;
+          })
+          .join('')}</ul>`;
+
+  const isOwn = state.profile?.id === profile.id;
+
+  return `
+    <div class="public-profile">
+      <div class="profile-header public-profile-header">
+        ${avatar}
+        <div>
+          <h3 class="public-profile-name">${escapeHtml(profile.nickname)}</h3>
+          <p class="match-meta">${escapeHtml(getProfileLocation(profile))}</p>
+          ${renderAchievementBadges(profile.id, { compact: false })}
+        </div>
+      </div>
+      ${about}
+      ${
+        stats
+          ? `<div class="profile-stats">
+              <span><strong>${stats.points}</strong> pts</span>
+              <span><strong>${stats.wins}</strong> V</span>
+              <span><strong>${stats.losses}</strong> D</span>
+              <span><strong>${stats.winRate}%</strong> aproveit.</span>
+            </div>`
+          : ''
+      }
+      <div class="profile-achievements-block">
+        <h3 class="profile-subtitle">Conquistas</h3>
+        ${renderAchievementList(profile.id)}
+      </div>
+      <div class="profile-achievements-block">
+        <h3 class="profile-subtitle">Últimas partidas</h3>
+        ${matchHistory}
+      </div>
+      ${
+        isOwn
+          ? `<button type="button" class="btn btn-primary" data-mais-view="perfil">Editar meu perfil</button>`
+          : ''
+      }
     </div>
   `;
 }
@@ -428,22 +652,31 @@ function renderRegras() {
 function renderMais() {
   switch (state.maisView) {
     case 'perfil':
-      return renderBackLink() + renderProfileForm();
+      return renderBackLink('menu') + renderProfileForm();
+    case 'jogador':
+      return renderBackLink(state.viewProfileFromRanking ? 'ranking' : 'menu') + renderPublicProfile();
     case 'auth':
-      return renderBackLink() + renderAuthForm();
+      return renderBackLink('menu') + renderAuthForm();
     case 'regras':
-      return renderBackLink() + renderRegras();
+      return renderBackLink('menu') + renderRegras();
+    case 'conquistas':
+      return renderBackLink('menu') + renderConquistas();
     default:
       return renderMaisMenu();
   }
 }
 
-function renderBackLink() {
-  return `<button class="btn btn-back" data-mais-view="menu" type="button">← Voltar</button>`;
+function renderBackLink(target = 'menu') {
+  const label = target === 'ranking' ? '← Voltar ao ranking' : '← Voltar';
+  return `<button class="btn btn-back" data-back-target="${target}" type="button">${label}</button>`;
 }
 
 function panelTitle() {
   if (state.tab === 'mais') {
+    if (state.maisView === 'jogador') {
+      const p = state.profiles.find((x) => x.id === state.viewProfileId);
+      return p ? p.nickname : APP.maisViews.jogador;
+    }
     return APP.maisViews[state.maisView] ?? APP.tabLabels.mais;
   }
   return APP.tabLabels[state.tab] ?? state.tab;
@@ -548,9 +781,33 @@ function bindEvents() {
   document.querySelectorAll('[data-mais-view]').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.maisView = btn.dataset.maisView;
+      if (state.maisView !== 'jogador') state.viewProfileId = null;
       state.formError = null;
       render();
     });
+  });
+
+  document.querySelectorAll('[data-back-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.backTarget;
+      if (target === 'ranking') {
+        state.tab = 'ranking';
+        state.maisView = 'menu';
+        state.viewProfileId = null;
+        state.viewProfileFromRanking = false;
+      } else {
+        state.maisView = 'menu';
+        state.viewProfileId = null;
+        state.viewProfileFromRanking = false;
+      }
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-view-profile]').forEach((btn) => {
+    btn.addEventListener('click', () =>
+      openPublicProfile(btn.dataset.viewProfile, btn.classList.contains('player-link')),
+    );
   });
 
   document.querySelector('[data-go-auth]')?.addEventListener('click', () => {
@@ -768,6 +1025,7 @@ async function loadData() {
     const [profiles, matches] = await Promise.all([fetchProfiles(), fetchMatches()]);
     state.profiles = profiles;
     state.matches = matches;
+    state.achievementMap = computeAllPlayerAchievements(profiles, matches);
   } catch (err) {
     state.error = err.message ?? APP.messages.error;
   } finally {

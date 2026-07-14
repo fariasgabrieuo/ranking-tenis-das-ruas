@@ -25,9 +25,53 @@ export const APP = {
   maisViews: {
     menu: 'Menu',
     perfil: 'Meu perfil',
+    jogador: 'Jogador',
     auth: 'Entrar / Cadastrar',
     regras: 'Regras',
+    conquistas: 'Conquistas',
   },
+
+  maisMenu: [
+    {
+      view: 'perfil',
+      icon: '👤',
+      title: 'Meu perfil',
+      desc: 'Foto, bairro e sobre',
+      section: 'conta',
+      requiresLogin: false,
+    },
+    {
+      view: 'auth',
+      icon: '🔑',
+      title: 'Entrar / Cadastrar',
+      desc: 'Acesse sua conta',
+      section: 'conta',
+      hideWhenLoggedIn: true,
+    },
+    {
+      view: 'auth',
+      icon: '🚪',
+      title: 'Sair',
+      desc: 'Encerrar sessão',
+      section: 'conta',
+      requiresLogin: true,
+      isLogout: true,
+    },
+    {
+      view: 'conquistas',
+      icon: '🏆',
+      title: 'Conquistas',
+      desc: 'Quem desbloqueou o quê',
+      section: 'ranking',
+    },
+    {
+      view: 'regras',
+      icon: '📋',
+      title: 'Regras',
+      desc: 'Pontuação e partidas',
+      section: 'ranking',
+    },
+  ],
 
   rankingColumns: [
     { key: 'position', label: '#', width: '48px' },
