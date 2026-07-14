@@ -294,11 +294,10 @@ function renderRegisterForm() {
     : '';
 
   const typeOptions = Object.entries(RULES.matchTypes)
-    .map(
-      ([value, meta]) =>
-        `<option value="${value}">${escapeHtml(meta.label)} — ${escapeHtml(meta.description)}</option>`,
-    )
+    .map(([value, meta]) => `<option value="${value}">${escapeHtml(meta.label)}</option>`)
     .join('');
+
+  const typeHint = `<strong>${escapeHtml(RULES.matchTypes.ranked.label)}:</strong> ${escapeHtml(RULES.matchTypes.ranked.description)} · <strong>${escapeHtml(RULES.matchTypes.friendly.label)}:</strong> ${escapeHtml(RULES.matchTypes.friendly.description)}`;
 
   return `
     ${formError}
@@ -314,6 +313,7 @@ function renderRegisterForm() {
       <div class="form-row">
         <label for="match_type">Tipo</label>
         <select id="match_type" required>${typeOptions}</select>
+        <p class="match-type-hint" id="match-type-hint">${typeHint}</p>
       </div>
       <div class="form-row">
         <label>Resultado</label>
