@@ -5,7 +5,7 @@ import { computeRanking, getPlayerName, getCafeComLeiteZone } from './lib/rankin
 import { computeAllPlayerAchievements, getPlayerAchievements, applyDevAchievementPreview, ACHIEVEMENTS } from './lib/achievements.js';
 import { getAchievementIconHtml } from './lib/achievementIcons.js';
 import { getProfileLocation } from './lib/profiles.js';
-import { parseSetScoreFromGames, validateScoreForWinner } from './lib/scoreParser.js';
+import { parseSetScoreFromGames } from './lib/scoreParser.js';
 import { getSession, signUp, signIn, signOut, onAuthStateChange, completeAuthFromUrl } from './lib/auth.js';
 import { formatAuthError } from './lib/authErrors.js';
 import {
@@ -357,13 +357,6 @@ function renderRegisterForm() {
         <p class="match-type-hint" id="match-type-hint">${typeHint}</p>
       </div>
       <div class="form-row">
-        <label>Resultado</label>
-        <div class="radio-group radio-group--inline">
-          <label><input type="radio" name="result" value="p1" checked> Jogador 1</label>
-          <label><input type="radio" name="result" value="p2"> Jogador 2</label>
-        </div>
-      </div>
-      <div class="form-row">
         <label>Placar do set</label>
         <div class="score-boxes">
           <div class="score-box">
@@ -376,7 +369,7 @@ function renderRegisterForm() {
             <input id="score_p2" type="number" min="0" max="7" inputmode="numeric" placeholder="4" required />
           </div>
         </div>
-        <p class="match-meta">1 set por partida. Ex: 6 e 4, ou 7 e 6.</p>
+        <p class="match-meta">1 set por partida. Quem tiver mais games vence. Ex: 6 e 4, ou 7 e 6.</p>
       </div>
       <div class="form-row">
         <label for="played_at">Data</label>
@@ -954,9 +947,6 @@ function bindEvents() {
       return;
     }
 
-    const result = document.querySelector('input[name="result"]:checked')?.value;
-    const winnerIsP1 = result === 'p1';
-    const winner_id = winnerIsP1 ? p1 : p2;
     const scoreP1 = document.getElementById('score_p1').value;
     const scoreP2 = document.getElementById('score_p2').value;
 
@@ -967,12 +957,8 @@ function bindEvents() {
       return;
     }
 
-    const validWinner = validateScoreForWinner(parsed, winnerIsP1);
-    if (!validWinner.ok) {
-      state.formError = validWinner.error;
-      render();
-      return;
-    }
+    const winnerIsP1 = parsed.player1Games > parsed.player2Games;
+    const winner_id = winnerIsP1 ? p1 : p2;
 
     state.formError = null;
 
